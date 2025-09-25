@@ -257,12 +257,38 @@ export default function TravelDashboard({ user, onLogout }: { user: string; onLo
     localStorage.setItem("travelPastSearches", JSON.stringify(updated));
   };
 
-  const handleRouteSearch = (destinations: string[]) => {
-    if (destinations.length >= 2) {
-      saveSearch(destinations);
-      alert("Searching route for:\n" + destinations.join(" → "));
-    }
-  };
+const handleRouteSearch = async (destinations: string[]) => {
+  try {
+    const coords = await Promise.all(
+      destinations.map(async (d) => {
+        console.log("Fetching coordinates for:", d);
+        const res = await fetch(
+          `http://localhost:5000/geocode?address=${encodeURIComponent(d)}`
+        );
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error(`Error response for "${d}":`, errData);
+          throw new Error(`Failed to fetch coordinates for "${d}"`);
+        }
+
+        const data = await res.json();
+        console.log(`Coordinates for "${d}":`, data);
+        return data; // { lat, lng }
+      })
+    );
+
+    console.log("All coordinates:", coords);
+
+    // TODO: run TSP solver here, e.g. tspBruteForce(coords)
+    // update map visualization with coords and TSP result
+
+  } catch (err: any) {
+    console.error("Error fetching coordinates:", err);
+    alert(`Error fetching coordinates: ${err.message}`);
+  }
+};
+
 
   return (
     <>
