@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { tspMemoized, Coord } from "../utils/tsp";
+﻿import React, { useEffect, useState } from "react";
+import { tspMemoized } from "../utils/tsp";
+
+// Updated Coord type
+export interface Coord {
+  name: string; // location name
+  lat: number;
+  lng: number;
+}
 
 interface RouteMapProps {
   locations: string[];
@@ -10,82 +17,61 @@ const RouteMap: React.FC<RouteMapProps> = ({ locations }) => {
   const [bestRoute, setBestRoute] = useState<Coord[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Debug: watch coords state
-  useEffect(() => {
-    console.log("coords state changed:", coords);
-  }, [coords]);
-
+  // Fetch coordinates whenever locations change
   useEffect(() => {
     const fetchCoords = async () => {
-      try {
-        console.log("Fetching coordinates for locations:", locations);
+      const results: Coord[] = [];
 
-        const geoResults: Coord[] = await Promise.all(
-          locations.map(async (loc) => {
-            const res = await fetch(
-              `http://localhost:5000/geocode?address=${encodeURIComponent(loc)}`
-            );
-
-            if (!res.ok) {
-              console.error(`Failed to fetch coordinates for "${loc}"`);
-              throw new Error(`Failed to fetch: ${loc}`);
-            }
-
-            const data: Coord = await res.json();
-            console.log(`Coordinates for "${loc}":`, data);
-            return data;
-          })
-        );
-
-        console.log("All coordinates fetched:", geoResults);
-
-        geoResults.forEach((coord, i) => {
-          if (!coord || typeof coord.lat !== "number" || typeof coord.lng !== "number") {
-            console.error(`Invalid coordinate at index ${i}:`, coord);
-          }
-        });
-
-        setCoords([...geoResults]); // shallow copy
-        console.log("Coordinates state updated.");
-
-        if (geoResults.length < 2) {
-          console.warn("Not enough coordinates to compute TSP.");
-          return;
-        }
-
-        console.log("Calling tspMemoized with coords:", geoResults);
-
+      for (const loc of locations) {
         try {
-          const { path: bestPath, minCost } = tspMemoized(geoResults);
-          console.log("Best route calculated:", bestPath);
-          console.log("Minimum distance (km):", minCost.toFixed(2));
-          setBestRoute(bestPath);
-        } catch (err) {
-          console.error("Error in TSP calculation:", err);
-          setError("TSP calculation failed.");
-        }
+          const res = await fetch(
+            `http://localhost:5000/geocode?address=${encodeURIComponent(loc)}`
+          );
 
-      } catch (err) {
-        console.error("Error fetching coordinates:", err);
-        setError("Failed to fetch coordinates.");
+          if (!res.ok) throw new Error(`Failed to fetch ${loc}`);
+
+          const data = await res.json();
+          results.push({ name: loc, lat: data.lat, lng: data.lng });
+        } catch (err) {
+          console.error(`Error fetching ${loc}:`, err);
+          setError(`Failed to fetch coordinates for ${loc}`);
+        }
       }
+
+      setCoords(results);
     };
 
-    if (locations.length > 0) {
-      fetchCoords();
-    }
+    if (locations.length > 0) fetchCoords();
   }, [locations]);
+
+  // Run TSP whenever coordinates are ready
+  useEffect(() => {
+    if (coords.length < 2) return;
+
+    try {
+      const { path: bestPath } = tspMemoized(coords); // TSP still works on lat/lng
+      setBestRoute(bestPath);
+    } catch (err) {
+      console.error("TSP calculation failed:", err);
+      setError("TSP calculation failed");
+    }
+  }, [coords]);
 
   return (
     <div>
       <h2>Best Route</h2>
-      {error ? (
-        <p style={{ color: "red" }}>{error}</p>
-      ) : bestRoute.length > 0 ? (
-        <pre>{JSON.stringify(bestRoute, null, 2)}</pre>
-      ) : (
-        <p>Calculating route...</p>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {!error && bestRoute.length > 0 && (
+        <ol>
+          {bestRoute.map((loc, i) => (
+            <li key={i}>{loc.name}</li>
+          ))}
+        </ol>
       )}
+
+      {!error && bestRoute.length === 0 && <p>Calculating route...</p>}
     </div>
   );
 };

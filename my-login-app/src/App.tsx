@@ -8,6 +8,8 @@ import WelcomeDashboard from "./pages/WelcomeDashboard";
 import TravelDashboard from "./pages/TravelDashboard";
 import 'leaflet/dist/leaflet.css';
 
+
+
 const CenterBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
   <div style={{
     minHeight: "100vh",

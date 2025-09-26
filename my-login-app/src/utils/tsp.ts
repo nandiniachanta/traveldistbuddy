@@ -1,83 +1,78 @@
 export interface Coord {
-  lat: number;
-  lng: number;
+    name: string;
+    lat: number;
+    lng: number;
 }
 
-// Haversine distance between two coordinates
+/**
+ * Haversine distance in km between two coordinates
+ */
 export const haversine = (a: Coord, b: Coord): number => {
-  const R = 6371; // Earth radius in km
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-  const lat1 = (a.lat * Math.PI) / 180;
-  const lat2 = (b.lat * Math.PI) / 180;
+    const R = 6371; // Earth radius in km
+    const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+    const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+    const lat1 = (a.lat * Math.PI) / 180;
+    const lat2 = (b.lat * Math.PI) / 180;
 
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-
-  return 2 * R * Math.asin(Math.sqrt(h));
+    const sinDlat = Math.sin(dLat / 2);
+    const sinDlng = Math.sin(dLng / 2);
+    const aa = sinDlat * sinDlat + sinDlng * sinDlng * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1 - aa));
+    return R * c;
 };
 
-// Memoized TSP using bitmask
-export const tspMemoized = (coords: Coord[]): { minCost: number; path: Coord[] } => {
-  console.log("Inside tspMemoized, received coords:", coords);
+/**
+ * TSP memoized (Held-Karp) without returning to start
+ */
+export const tspMemoized = (coords: Coord[]): { path: Coord[]; minCost: number } => {
+    const n = coords.length;
+    const memo: Map<string, number> = new Map();
+    const parent: Map<string, number> = new Map();
 
-  const n = coords.length;
+    const VISITED_ALL = (1 << n) - 1;
 
-  // Precompute distance matrix
-  const dist: number[][] = Array.from({ length: n }, () => Array(n).fill(0));
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      dist[i][j] = haversine(coords[i], coords[j]);
-    }
-  }
+    const tsp = (pos: number, mask: number): number => {
+        if (mask === VISITED_ALL) return 0; // all visited, stop here
 
-  // DP table and parent tracker
-  const dp: number[][] = Array.from({ length: 1 << n }, () => Array(n).fill(-1));
-  const parent: number[][] = Array.from({ length: 1 << n }, () => Array(n).fill(-1));
+        const key = `${pos}|${mask}`;
+        if (memo.has(key)) return memo.get(key)!;
 
-  const tsp = (mask: number, pos: number): number => {
-    if (mask === (1 << n) - 1) return dist[pos][0]; // return to start
-    if (dp[mask][pos] !== -1) return dp[mask][pos];
-
-    let ans = Infinity;
-    for (let next = 0; next < n; next++) {
-      if ((mask & (1 << next)) === 0) {
-        const newCost = dist[pos][next] + tsp(mask | (1 << next), next);
-        if (newCost < ans) {
-          ans = newCost;
-          parent[mask][pos] = next;
-          console.log(`Updated parent[${mask}][${pos}] = ${next}`);
+        let min = Infinity;
+        for (let next = 0; next < n; next++) {
+            if ((mask & (1 << next)) === 0) {
+                const newCost = haversine(coords[pos], coords[next]) + tsp(next, mask | (1 << next));
+                if (newCost < min) {
+                    min = newCost;
+                    parent.set(key, next);
+                }
+            }
         }
-      }
+
+        memo.set(key, min);
+        return min;
+    };
+
+    const minCost = tsp(0, 1 << 0); // start from first city
+
+    // Reconstruct path
+    const path: Coord[] = [];
+    let mask = 1;
+    let pos = 0;
+
+    while (mask !== VISITED_ALL) {
+        path.push(coords[pos]);
+        const key = `${pos}|${mask}`;
+        const next = parent.get(key);
+        if (next === undefined) break; // no next city
+        mask |= 1 << next;
+        pos = next;
     }
 
-    dp[mask][pos] = ans;
-    return ans;
-  };
-
-  const minCost = tsp(1, 0);
-
-  // Reconstruct path
-  const path: Coord[] = [];
-  let mask = 1;
-  let pos = 0;
-
-  while (path.length < n) {
+    // push last city
     path.push(coords[pos]);
-    const next = parent[mask][pos];
 
-    if (next === -1 || next === undefined) {
-      console.error(`Invalid parent at mask=${mask}, pos=${pos}`);
-      break;
-    }
+    console.log("Final reconstructed path:", path.map(c => c.name));
+    console.log("Minimum distance (km):", minCost.toFixed(2));
 
-    pos = next;
-    mask |= (1 << pos);
-  }
-
-  path.push(coords[0]); // return to start
-  console.log("Final reconstructed path:", path);
-
-  return { minCost, path };
+    return { path, minCost };
 };

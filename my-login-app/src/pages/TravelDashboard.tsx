@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaSearchLocation, FaBars, FaTimes } from "react-icons/fa";
-
+import RouteMap from "../components/RouteMap";
 
 // ----------------- Styled Components -----------------
 
@@ -250,6 +250,16 @@ export default function TravelDashboard({ user, onLogout }: { user: string; onLo
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
+    // NEW: locations state
+    const [locations, setLocations] = useState<string[]>([]);
+
+    // NEW: handleRouteSearch
+    const handleRouteSearch = (destinations: string[]) => {
+        console.log("Destinations passed to RouteMap:", destinations);
+        setLocations(destinations);
+        saveSearch(destinations); // optional: save to past searches
+    };
+
   const saveSearch = (destinations: string[]) => {
     const record: SearchRecord = { destinations, timestamp: Date.now() };
     const updated = [...past, record].slice(-10);
@@ -257,37 +267,8 @@ export default function TravelDashboard({ user, onLogout }: { user: string; onLo
     localStorage.setItem("travelPastSearches", JSON.stringify(updated));
   };
 
-const handleRouteSearch = async (destinations: string[]) => {
-  try {
-    const coords = await Promise.all(
-      destinations.map(async (d) => {
-        console.log("Fetching coordinates for:", d);
-        const res = await fetch(
-          `http://localhost:5000/geocode?address=${encodeURIComponent(d)}`
-        );
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          console.error(`Error response for "${d}":`, errData);
-          throw new Error(`Failed to fetch coordinates for "${d}"`);
-        }
-
-        const data = await res.json();
-        console.log(`Coordinates for "${d}":`, data);
-        return data; // { lat, lng }
-      })
-    );
-
-    console.log("All coordinates:", coords);
-
-    // TODO: run TSP solver here, e.g. tspBruteForce(coords)
-    // update map visualization with coords and TSP result
-
-  } catch (err: any) {
-    console.error("Error fetching coordinates:", err);
-    alert(`Error fetching coordinates: ${err.message}`);
-  }
-};
+    
 
 
   return (
@@ -378,7 +359,8 @@ const handleRouteSearch = async (destinations: string[]) => {
             <FormSection>
               <DestinationForm onSearch={handleRouteSearch} />
             </FormSection>
-            <MapSection>
+                      <MapSection>
+                          <RouteMap locations={locations} />
               <h3>Route Map</h3>
               <p>Here we’ll visualize the destinations and path.</p>
             </MapSection>
