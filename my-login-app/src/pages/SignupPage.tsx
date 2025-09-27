@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import { auth, db } from "../firebase/firebaseConfig";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+
 
 const Card = styled.div`
   background: rgba(255,255,255,0.9);
@@ -104,16 +108,27 @@ export default function SignupPage({
   const [err, setErr] = useState("");
   const navigate = useNavigate();
 
-  function handleSignup(e: React.FormEvent) {
-    e.preventDefault();
-    setErr("");
-    if (pw !== cpw) {
-      setErr("Passwords don't match.");
-      return;
+    async function handleSignup(e: React.FormEvent) {
+        e.preventDefault();
+        if (pw !== cpw) {
+            console.log("Passwords don't match");
+            return;
+        }
+
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, pw);
+            if (userCredential.user) {
+                await updateProfile(userCredential.user, { displayName: name });
+                console.log("Signup success:", userCredential.user);
+                onSignup(name, email); // update App state
+                navigate("/welcome");
+            }
+        } catch (error: any) {
+            console.log("Signup error:", error.message);
+        }
     }
-    onSignup(name, email);
-    navigate("/welcome");
-  }
+
+
   return (
     <Card>
       <Title>Sign Up</Title>

@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope } from "react-icons/fa";
+import { auth } from "../firebase/firebaseConfig";
+import { sendPasswordResetEmail } from "firebase/auth";
+
 
 const Card = styled.div`
   background: rgba(255,255,255,0.9);
@@ -102,12 +105,18 @@ export default function ForgotPasswordPage() {
           <Button accent="teal" onClick={() => navigate("/login")}>Back to Login</Button>
         </div>
       ) : (
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            setSent(true);
-          }}
-        >
+                  <form
+                      onSubmit={async e => {
+                          e.preventDefault();
+                          try {
+                              await sendPasswordResetEmail(auth, email);
+                              setSent(true);
+                          } catch (error: any) {
+                              alert(error.message); // show Firebase error
+                          }
+                      }}
+                  >
+
           <InputGroup>
             <InputIcon>
               <FaEnvelope />

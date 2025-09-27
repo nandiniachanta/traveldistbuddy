@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import { auth } from "../firebase/firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
+
 
 const Card = styled.div`
   background: rgba(255,255,255,0.9);
@@ -111,11 +114,27 @@ export default function LoginPage({
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    onLogin(email);
-    navigate("/welcome");
-  }
+    async function handleLogin(e: React.FormEvent) {
+        e.preventDefault();
+        console.log("Login clicked");
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            console.log("Firebase login success", userCredential.user);
+
+            const user = userCredential.user;
+            if (user) {
+                const nameFromFirebase = user.displayName || email.split("@")[0];
+                console.log("Updating App state with name:", nameFromFirebase);
+                onLogin(nameFromFirebase);
+                console.log("Navigating to welcome page");
+                navigate("/welcome");
+            }
+        } catch (error: any) {
+            console.log("Login error:", error.message);
+        }
+    }
+
+
 
   return (
     <Card>
