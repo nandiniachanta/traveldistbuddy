@@ -3,7 +3,8 @@ import fetch from "node-fetch";
 import cors from "cors";
 
 const app = express();
-app.use(cors()); // allow requests from frontend
+app.use(cors({ origin: "*" })); // or your frontend URL in production
+ // allow requests from frontend
 
 // Type for the OpenStreetMap API response
 interface GeocodeResponseItem {
@@ -48,4 +49,8 @@ app.get("/geocode", async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

@@ -33,16 +33,18 @@ const RouteMap: React.FC<RouteMapProps> = ({ locations }) => {
     const [coords, setCoords] = useState<Coord[]>([]);
     const [bestRoute, setBestRoute] = useState<Coord[]>([]);
     const [error, setError] = useState<string | null>(null);
-
     // Fetch coordinates from backend
     useEffect(() => {
+        const API_BASE = "https://traveldistbuddy.vercel.app"; // <-- Use env var
         const fetchCoords = async () => {
             const results: Coord[] = [];
 
             for (const loc of locations) {
                 try {
+                    
+                    console.log({ API_BASE });
                     const res = await fetch(
-                        `http://localhost:5000/geocode?address=${encodeURIComponent(loc)}`
+                        `${API_BASE}/geocode?address=${encodeURIComponent(loc)}`
                     );
 
                     if (!res.ok) throw new Error(`Failed to fetch ${loc}`);

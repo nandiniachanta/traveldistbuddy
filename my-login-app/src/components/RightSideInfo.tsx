@@ -2,9 +2,23 @@
 import React from "react";
 import { MapPin, Clock, Users } from "lucide-react";
 import "./RightSideInfo.css";
+import { useState } from "react";
+
+
 
 export default function RightSideInfo() {
+
+    const [showLogin, setShowLogin] = useState(false);
+
+    const handleLoginClick = () => {
+        setShowLogin(true);
+    };
+
+    const handleCloseLogin = () => {
+        setShowLogin(false);
+    };
     return (
+
         <div className="right-side">
             {/* Header */}
             <div className="right-side-header">
@@ -57,13 +71,30 @@ export default function RightSideInfo() {
 
             {/* CTA */}
             <div className="cta">
-                <button className="cta-btn">Start Planning Your Trip Now</button>
+                <button className="cta-btn" onClick={handleLoginClick}>
+                    Start Planning Your Trip Now
+                </button>
                 <div className="cta-tags">
                     <span>✔ Free to get started</span>
                     <span>✔ No credit card required</span>
                     <span>✔ Export to any map app</span>
                 </div>
             </div>
+            {showLogin && (
+                <div className="login-modal-overlay">
+                    <div className="login-modal">
+                        <h2>Please register yourself</h2>
+                        <div className="modal-actions" style={{ justifyContent: 'center' }}>
+                            <button className="cta-btn" onClick={handleCloseLogin}>
+                                Okay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+
         </div>
     );
 }
