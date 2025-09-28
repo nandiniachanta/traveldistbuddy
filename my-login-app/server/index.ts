@@ -18,11 +18,11 @@ app.get("/geocode", async (req, res) => {
   if (!address) return res.status(400).json({ error: "Address is required" });
 
   try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-        address
-      )}&format=json`
-    );
+      const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json`,
+          { headers: { "User-Agent": "TravelDistBuddy/1.0 (your_email@example.com)" } }
+      );
+
 
     // Parse JSON with type assertion
     const data = (await response.json()) as GeocodeResponseItem[];
