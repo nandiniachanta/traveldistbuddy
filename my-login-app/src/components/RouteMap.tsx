@@ -35,7 +35,8 @@ const RouteMap: React.FC<RouteMapProps> = ({ locations }) => {
     const [error, setError] = useState<string | null>(null);
     // Fetch coordinates from backend
     useEffect(() => {
-        const API_BASE = "https://traveldistbuddy.vercel.app"; // <-- Use env var
+        const API_BASE = process.env.REACT_APP_API_URL;
+ // <-- Use env var
         const fetchCoords = async () => {
             const results: Coord[] = [];
 
