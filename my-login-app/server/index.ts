@@ -49,6 +49,12 @@ app.get("/geocode", async (req, res) => {
   }
 });
 
+app.get("/open-landing", (req, res) => {
+    // Redirect to second frontend (landing page)
+    res.redirect("http://localhost:5173");
+    // replace with actual URL of second project
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

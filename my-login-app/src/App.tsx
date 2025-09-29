@@ -10,6 +10,20 @@ import WelcomeDashboard from "./pages/WelcomeDashboard";
 import TravelDashboard from "./pages/TravelDashboard";
 import RightSideInfo from "./components/RightSideInfo";
 import "./components/RightSideInfo.css";
+import { useEffect } from "react";
+
+function DashboardRedirect() {
+    return (
+        <div style={{ width: "100%", height: "100vh" }}>
+            <iframe
+                src="http://localhost:5173"
+                style={{ width: "100%", height: "100%", border: "none" }}
+                title="Travel Landing Page"
+            />
+        </div>
+    );
+}
+
 /* ========= Auth Layout ========= */
 const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div
@@ -127,16 +141,27 @@ const App: React.FC = () => {
                         )
                     }
                 />
+                {/*<Route*/}
+                {/*    path="/dashboard"*/}
+                {/*    element={*/}
+                {/*        userName ? (*/}
+                {/*            <TravelDashboard user={userName} onLogout={() => setUserName("")} />*/}
+                {/*        ) : (*/}
+                {/*            <Navigate to="/login" replace />*/}
+                {/*        )*/}
+                {/*    }*/}
+                {/*/>*/}
                 <Route
                     path="/dashboard"
                     element={
                         userName ? (
-                            <TravelDashboard user={userName} onLogout={() => setUserName("")} />
+                            <DashboardRedirect />
                         ) : (
                             <Navigate to="/login" replace />
                         )
                     }
                 />
+         
 
                 {/* Default redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />
