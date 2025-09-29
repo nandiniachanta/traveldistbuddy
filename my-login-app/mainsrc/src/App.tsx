@@ -16,7 +16,7 @@ function DashboardRedirect() {
     return (
         <div style={{ width: "100%", height: "100vh" }}>
             <iframe
-                src="http://localhost:5173"
+                src="https://travelbuddy-extensionpage.vercel.app/"
                 style={{ width: "100%", height: "100%", border: "none" }}
                 title="Travel Landing Page"
             />
