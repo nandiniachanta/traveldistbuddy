@@ -56,6 +56,6 @@
       },
       "scripts": {
             "dev": "vite --port 5173",
-            "build": "npx vite build"
+            "build": "vite build"
       }
 }
